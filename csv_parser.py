@@ -86,22 +86,25 @@ if __name__ == "__main__":
             csv_file.columns = map(str.lower, csv_file.columns)
             csv_file.columns = csv_file.columns.str.strip()
 
-            dup_col_msg = False
+            dup_col_msg = ""
+            dataType_col_msg = ""
             
             for col in csv_file.columns:
                 if list(csv_file.columns).count(col) > 1:
                     index = list(csv_file.columns).index(col)
                     csv_file.columns.values[index] = col+"_duplicated_column_"+str(random.randint(1,50))
-                    dup_col_msg = True
+                    dup_col_msg = " - duplicated columm - "+col
+                if csv_file[col].dtype == "uint64":
+                    csv_file = csv_file.astype({col:str})
+                    dataType_col_msg = " - Change of data type - "+col
 
+            
             csv_file.to_sql(name=path_file.stem, con=connection, index=False)
 
             print(">>>",i,"of",len(list_of_files_to_process), sep=" ")
            
-            msg = ""
-            if dup_col_msg: 
-                msg = " - duplicated columm"
-            logging.info(">>> " + str(i)+" of "+ str(len(list_of_files_to_process))+ msg)
+            
+            logging.info(">>> " + str(i)+" of "+ str(len(list_of_files_to_process))+ dup_col_msg + dataType_col_msg)
 
             i += 1
             
