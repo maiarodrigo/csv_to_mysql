@@ -5,7 +5,9 @@
 2. Run Mysql Container with mysql latest or the target version you are creating the data to be imported
 
 `docker run --name=mysql_temp --env="MYSQL_ROOT_PASSWORD=root" -p 3306:3306 -d mysql:latest`
+
 or
+
 `docker run --name=mysql_temp --env="MYSQL_ROOT_PASSWORD=root" -p 3306:3306 -d mysql:5.7.27`
 
 
