@@ -1,4 +1,3 @@
-import sqlite3
 import pandas as pd
 import os
 from pathlib import Path 
@@ -8,7 +7,6 @@ import sqlalchemy
 from argparse import ArgumentParser
 import logging
 from datetime import datetime
-from argparse import ArgumentParser
 
 
 if __name__ == "__main__":  
