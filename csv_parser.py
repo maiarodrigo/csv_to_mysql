@@ -13,13 +13,15 @@ if __name__ == "__main__":
 
     time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    logging.basicConfig(filename='csv_to_sql_parser_log_'+time+'.log',level=logging.DEBUG)
+    
 
     parser = ArgumentParser()
     parser.add_argument("-f", "--file", dest="path_to_file",help="write the path of the file")
     parser.add_argument("-n", "--cname", dest="cont_name",help="write the conatiner name")
     parser.add_argument("-pw", "--rootpassword", dest="root_password",help="write the root pass defoned wnhe the container was started")
     parser.add_argument("-pr", "--containerport", dest="port",type=int,help="write the PORT number associated with the container defoned wnhe the container was started")
+    parser.add_argument("-tp", "--tableprefix", dest="table_prefix",help="optional - table prefixes")
+
     args = parser.parse_args()
 
     if args.path_to_file:
@@ -30,13 +32,18 @@ if __name__ == "__main__":
             args.root_password = "root"
         if not args.port:
             args.port = "3306"
+        if not args.table_prefix:
+            args.table_prefix = ""
+        else:
+            args.table_prefix = args.table_prefix + "_"
 
         config = {
             'host': 'localhost',
             'port': args.port,
             'user': "root" ,
             'password': args.root_password,
-            'database': 'temp'
+            'database': 'temp',
+            "table_prefix" : args.table_prefix
         }
 
         db_user = config.get('user')
@@ -44,8 +51,9 @@ if __name__ == "__main__":
         db_host = config.get('host')
         db_port = config.get('port')
         db_name = config.get('database')
+        db_tb_prefix = config.get('table_prefix')
 
-
+        logging.basicConfig(filename=db_tb_prefix+'csv_to_sql_parser_log_'+time+'.log',level=logging.DEBUG)
         connection_str = f'mysql+pymysql://{db_user}:{db_pwd}@{db_host}:{db_port}'
        
         engine = sqlalchemy.create_engine(connection_str)
@@ -96,8 +104,8 @@ if __name__ == "__main__":
                     csv_file = csv_file.astype({col:str})
                     dataType_col_msg = " - Change of data type - "+col
 
-            
-            csv_file.to_sql(name=path_file.stem, con=connection, index=False)
+           
+            csv_file.to_sql(name=db_tb_prefix+path_file.stem, con=connection, index=False)
 
             print(">>>",i,"of",len(list_of_files_to_process), sep=" ")
            
@@ -105,15 +113,18 @@ if __name__ == "__main__":
             logging.info(">>> " + str(i)+" of "+ str(len(list_of_files_to_process))+ dup_col_msg + dataType_col_msg)
 
             i += 1
-            
+    
 
         print("dumping tables to SQL")
         logging.info("dumping tables to SQL")
             
-        myCmd = 'docker exec -it '+args.cont_name+' mysqldump temp > output_'+time+'.sql -uroot -proot'
+        myCmd = 'docker exec -it '+args.cont_name+' mysqldump temp > '+db_tb_prefix+'output_'+time+'.sql -uroot -proot'
+
+        
+
         os.system(myCmd)
 
-        with open('output_'+time+'.sql', 'r+') as f: #open in read / write mode
+        with open(db_tb_prefix+'output_'+time+'.sql', 'r+') as f: #open in read / write mode
             
             f.readline() #read the first line and throw it out
             data = f.read() #read the rest
